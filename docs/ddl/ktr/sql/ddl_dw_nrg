@@ -1,0 +1,86 @@
+CREATE DATABASE IF NOT EXISTS `dw_nrg`;
+USE `dw_nrg`;
+
+CREATE TABLE `dim_kanal` (
+  `kanal_key` int(11) NOT NULL AUTO_INCREMENT,
+  `kode_kanal` varchar(50) NOT NULL,
+  `nama_kanal` varchar(255) NOT NULL,
+  `tipe_kanal` varchar(50) NOT NULL,
+  `kota_baku` varchar(100) DEFAULT NULL,
+  PRIMARY KEY (`kanal_key`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+CREATE TABLE `dim_pelanggan` (
+  `pelanggan_key` int(11) NOT NULL AUTO_INCREMENT,
+  `no_hp_bersih` varchar(30) NOT NULL,
+  `customer_id_ecom` varchar(50) DEFAULT NULL,
+  `member_id_pos` varchar(50) DEFAULT NULL,
+  `nama_pelanggan` varchar(255) DEFAULT NULL,
+  `email` varchar(255) DEFAULT NULL,
+  `kota_baku` varchar(100) DEFAULT NULL,
+  `status_omnichannel` varchar(50) NOT NULL,
+  `buyer_hash_mpl` varchar(100) DEFAULT NULL,
+  PRIMARY KEY (`pelanggan_key`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+CREATE TABLE `dim_produk` (
+  `produk_key` int(11) NOT NULL AUTO_INCREMENT,
+  `material_no` varchar(50) NOT NULL,
+  `nama_produk` varchar(255) NOT NULL,
+  `kategori` varchar(100) DEFAULT NULL,
+  `sub_kategori` varchar(100) DEFAULT NULL,
+  `brand` varchar(100) DEFAULT NULL,
+  `supplier_id` varchar(50) DEFAULT NULL,
+  `nama_supplier` varchar(100) DEFAULT NULL,
+  PRIMARY KEY (`produk_key`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+CREATE TABLE `dim_promo` (
+  `promo_key` int(11) NOT NULL AUTO_INCREMENT,
+  `kode_promo` varchar(100) NOT NULL,
+  `nama_kampanye` varchar(255) DEFAULT NULL,
+  `jenis_promo` varchar(50) DEFAULT NULL,
+  `kanal` varchar(50) DEFAULT NULL,
+  `tgl_mulai` date DEFAULT NULL,
+  `tgl_selesai` date DEFAULT NULL,
+  `target_diskon_persen` decimal(5,2) DEFAULT 0.00,
+  PRIMARY KEY (`promo_key`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+CREATE TABLE `dim_waktu` (
+  `waktu_key` int(11) NOT NULL,
+  `tanggal` date NOT NULL,
+  `hari_ke` int(11) NOT NULL,
+  `nama_hari` varchar(15) NOT NULL,
+  `bulan_ke` int(11) NOT NULL,
+  `nama_bulan` varchar(15) NOT NULL,
+  `kuartal` int(11) NOT NULL,
+  `tahun` int(11) NOT NULL,
+  `is_weekend` tinyint(1) NOT NULL DEFAULT 0,
+  PRIMARY KEY (`waktu_key`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+CREATE TABLE `fact_penjualan` (
+  `penjualan_key` bigint(20) NOT NULL AUTO_INCREMENT,
+  `waktu_key` int(11) NOT NULL,
+  `produk_key` int(11) NOT NULL,
+  `pelanggan_key` int(11) NOT NULL,
+  `kanal_key` int(11) NOT NULL,
+  `promo_key` int(11) NOT NULL,
+  `no_transaksi` varchar(100) NOT NULL,
+  `line_no` int(11) NOT NULL,
+  `qty` int(11) NOT NULL,
+  `harga_satuan_tanpa_ppn` decimal(15,2) NOT NULL,
+  `penjualan_kotor` decimal(15,2) NOT NULL,
+  `diskon_nominal` decimal(15,2) DEFAULT 0.00,
+  `penjualan_bersih` decimal(15,2) NOT NULL,
+  `harga_pokok_penjualan` decimal(15,2) NOT NULL,
+  `fee_marketplace` decimal(15,2) DEFAULT 0.00,
+  `margin_kotor` decimal(15,2) NOT NULL,
+  PRIMARY KEY (`penjualan_key`),
+  CONSTRAINT `fk_fact_waktu` FOREIGN KEY (`waktu_key`) REFERENCES `dim_waktu` (`waktu_key`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `fk_fact_produk` FOREIGN KEY (`produk_key`) REFERENCES `dim_produk` (`produk_key`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `fk_fact_pelanggan` FOREIGN KEY (`pelanggan_key`) REFERENCES `dim_pelanggan` (`pelanggan_key`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `fk_fact_kanal` FOREIGN KEY (`kanal_key`) REFERENCES `dim_kanal` (`kanal_key`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `fk_fact_promo` FOREIGN KEY (`promo_key`) REFERENCES `dim_promo` (`promo_key`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
